@@ -23,18 +23,44 @@ def init_db():
     users_coll = database['users']
     posts_coll = database['posts']
 
-    user_id = users_coll.insert_one({
-        'username': 'DG266',
-        'password': generate_password_hash('password')
-    }).inserted_id
-
-    posts_coll.insert_one({
-        'postedAt': datetime.datetime.now(),
-        'body': 'Hi there, I\'m testing this feature.',
-        'user': {
-            'name': 'DG266'
+    user_ids = users_coll.insert_many([
+        {
+            'username': 'DG266',
+            'password': generate_password_hash('password')
+        },
+        {
+            'username': 'MarioRossi',
+            'password': generate_password_hash('password')
+        },
+        {
+            'username': 'LucaVerdi',
+            'password': generate_password_hash('password')
         }
-    })
+    ]).inserted_ids
+
+    posts_coll.insert_many([
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Hi there, I\'m testing this feature.',
+            'creator': {
+                'username': 'DG266'
+            }
+        },
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Buongiorno da Mario!',
+            'creator': {
+                'username': 'MarioRossi'
+            }
+        },
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Buonasera da Luca!',
+            'creator': {
+                'username': 'LucaVerdi'
+            }
+        }
+    ])
 
 
 @click.command('init-db')
