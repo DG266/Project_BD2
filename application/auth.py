@@ -33,7 +33,10 @@ def register():
             error = 'Username already exists.'
 
         if error is None:
-            new_user_id = users.insert_one({'username': username, 'password': generate_password_hash(password)}).inserted_id
+            new_user_id = users.insert_one({
+                'username': username,
+                'password': generate_password_hash(password)
+            }).inserted_id
             print(f'New user registered. ID = {new_user_id}')
             return redirect(url_for("auth.login"))
 
