@@ -30,6 +30,11 @@
                     </div>
                 </header>
                 <p>{{ post['body'] }}</p>
+                <p>
+                    {% if post['tags']|length > 0 %}
+                        {% for tag in post['tags'] %}#{{ tag }} {% endfor %}
+                    {% endif %}
+                </p>
                 <br>
                 {% if post.creator['username'] == g.user['username'] %}
                     <a href="{{ url_for('post.update', id=post['_id']) }}">Edit</a>

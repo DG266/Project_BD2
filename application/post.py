@@ -27,11 +27,27 @@ def index():
     return render_template('post/index.html', posts=data)
 
 
+def clean_tags(tags_content):
+    tags = tags_content.split(",")
+    # Remove annoying spaces in tags
+    for i in range(0, len(tags)):
+        tags[i] = tags[i].strip()
+
+    return tags
+
+
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
     if request.method == 'POST':
         body = request.form['body']
+
+        tags_content = request.form['tags']
+        if not tags_content:
+            tags = []
+        else:
+            tags = clean_tags(tags_content)
+
         error = None
 
         if not body:
@@ -46,6 +62,7 @@ def create():
                 'postedAt': datetime.datetime.now(),
                 'body': body,
                 'likes': [],
+                'tags': tags,
                 'creator': {
                     'username': g.user['username']
                 }
@@ -75,6 +92,13 @@ def update(id):
 
     if request.method == 'POST':
         updated_body = request.form['body']
+
+        updated_tags_content = request.form['tags']
+        if (not updated_tags_content) or (updated_tags_content.strip() == ""):
+            updated_tags = []
+        else:
+            updated_tags = clean_tags(updated_tags_content)
+
         error = None
 
         if not updated_body:
@@ -87,7 +111,8 @@ def update(id):
                 '_id': ObjectId(id)
             }, {
                 '$set': {
-                    'body': updated_body
+                    'body': updated_body,
+                    'tags': updated_tags
                 }
             }, upsert=False)
 

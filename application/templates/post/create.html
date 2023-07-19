@@ -11,7 +11,12 @@
         <h3>Create a new post!</h3>
         <form method="post">
             <label for="body">Content</label>
+            <br>
             <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
+            <br>
+            <label for="tags">Tags (separate each tag with a comma)</label>
+            <br>
+            <textarea name="tags" id="tags">{{ request.form['tags'] }}</textarea>
             <input type="submit" value="Post">
         </form>
     </body>
