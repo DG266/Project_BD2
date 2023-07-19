@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Project_BD2</title>
+    </head>
+    <body>
+        {% for message in get_flashed_messages() %}
+            <div class="flash">{{ message }}</div>
+        {% endfor %}
+        <h1>WORK IN PROGRESS...</h1>
+        {% if g.user %}
+            <h3>Hello {{ g.user['username'] }}!</h3>
+            <a href="{{ url_for('post.create') }}">Create a new post</a>
+            <br>
+            <a href="{{ url_for('auth.logout') }}">Log Out</a>
+        {% else %}
+            <a href="{{ url_for('auth.register') }}">Create a new account</a>
+            <br>
+            <a href="{{ url_for('auth.login') }}">Log into your account</a>
+        {% endif %}
+
+
+        {% for post in posts %}
+            <article>
+                <header>
+                    <div>
+                        <h1>Post</h1>
+                        <div>by {{ post.creator['username'] }} on {{ post['postedAt'].strftime('%Y-%m-%d') }}</div>
+                    </div>
+                </header>
+                <p>{{ post['body'] }}</p>
+                <br>
+                {% if post.creator['username'] == g.user['username'] %}
+                    <a href="{{ url_for('post.update', id=post['_id']) }}">Edit</a>
+                    <form action="{{ url_for('post.delete', id=post['_id']) }}" method="post">
+                        <input type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+                    </form>
+                {% endif %}
+            </article>
+            {% if not loop.last %}
+                <hr>
+            {% endif %}
+        {% endfor %}
+    </body>
+</html>
