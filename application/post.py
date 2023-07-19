@@ -45,6 +45,7 @@ def create():
             posts_coll.insert_one({
                 'postedAt': datetime.datetime.now(),
                 'body': body,
+                'likes': [],
                 'creator': {
                     'username': g.user['username']
                 }
@@ -107,3 +108,40 @@ def delete(id):
 
     return redirect(url_for('post.index'))
 
+
+@bp.route('/<id>/like', methods=('POST',))
+@login_required
+def like(id):
+    database = db.get_database()
+    posts_coll = database['posts']
+    post = posts_coll.find_one({'_id': ObjectId(id)})
+    check_post(id, post, False)
+
+    posts_coll.update_one({
+        '_id': ObjectId(id)
+    }, {
+        '$addToSet': {
+            'likes': g.user["_id"]
+        }
+    }, upsert=False)
+
+    return redirect(url_for('post.index'))
+
+
+@bp.route('/<id>/unlike', methods=('POST',))
+@login_required
+def unlike(id):
+    database = db.get_database()
+    posts_coll = database['posts']
+    post = posts_coll.find_one({'_id': ObjectId(id)})
+    check_post(id, post, False)
+
+    posts_coll.update_one({
+        '_id': ObjectId(id)
+    }, {
+        '$pull': {
+            'likes': g.user["_id"]
+        }
+    }, upsert=False)
+
+    return redirect(url_for('post.index'))

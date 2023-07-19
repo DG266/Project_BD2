@@ -42,6 +42,7 @@ def init_db():
         {
             'postedAt': datetime.datetime.now(),
             'body': 'Hi there, I\'m testing this feature.',
+            'likes': [],
             'creator': {
                 'username': 'DG266'
             }
@@ -49,6 +50,7 @@ def init_db():
         {
             'postedAt': datetime.datetime.now(),
             'body': 'Buongiorno da Mario!',
+            'likes': [],
             'creator': {
                 'username': 'MarioRossi'
             }
@@ -56,6 +58,7 @@ def init_db():
         {
             'postedAt': datetime.datetime.now(),
             'body': 'Buonasera da Luca!',
+            'likes': [],
             'creator': {
                 'username': 'LucaVerdi'
             }

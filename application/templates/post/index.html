@@ -25,7 +25,7 @@
             <article>
                 <header>
                     <div>
-                        <h1>Post</h1>
+                        <h1>Post - Likes: {{ post.likes|length }}</h1>
                         <div>by {{ post.creator['username'] }} on {{ post['postedAt'].strftime('%Y-%m-%d') }}</div>
                     </div>
                 </header>
@@ -36,6 +36,17 @@
                     <form action="{{ url_for('post.delete', id=post['_id']) }}" method="post">
                         <input type="submit" value="Delete" onclick="return confirm('Are you sure?');">
                     </form>
+                {% endif %}
+                {% if g.user %}
+                    {% if g.user['_id'] in post.likes  %}
+                        <form action="{{ url_for('post.unlike', id=post['_id']) }}" method="post">
+                            <input type="submit" value="Unlike post">
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('post.like', id=post['_id']) }}" method="post">
+                            <input type="submit" value="Like post">
+                        </form>
+                    {% endif %}
                 {% endif %}
             </article>
             {% if not loop.last %}
