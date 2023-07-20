@@ -1,23 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Project_BD2</title>
-    </head>
-    <body>
-        {% for message in get_flashed_messages() %}
-            <div class="flash">{{ message }}</div>
-        {% endfor %}
-        <h3>Create a new post!</h3>
-        <form method="post">
-            <label for="body">Content</label>
-            <br>
-            <textarea name="body" id="body">{{ request.form['body'] or post['body'] }}</textarea>
-            <br>
-            <label for="tags">Tags (separate each tag with a comma)</label>
-            <br>
-            <textarea name="tags" id="tags">{% for tag in post['tags'] %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}</textarea>
-            <input type="submit" value="Update post">
-        </form>
-    </body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Update your post{% endblock %}
+
+{% block content %}
+<h3>Update your post!</h3>
+<form method="post">
+    <label for="body">Content</label>
+    <br>
+    <textarea name="body" id="body">{{ request.form['body'] or post['body'] }}</textarea>
+    <br>
+    <label for="tags">Tags (separate each tag with a comma)</label>
+    <br>
+    <textarea name="tags" id="tags">{% for tag in post['tags'] %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}</textarea>
+    <input type="submit" value="Update post">
+</form>
+{% endblock %}
