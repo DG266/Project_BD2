@@ -1,5 +1,5 @@
 # See https://flask.palletsprojects.com/en/2.3.x/tutorial/
-from flask import g, Blueprint, flash, redirect, request, render_template, url_for, session
+from flask import g, Blueprint, flash, redirect, request, render_template, url_for, jsonify
 
 from werkzeug.exceptions import abort
 
@@ -150,7 +150,9 @@ def like(id):
         }
     }, upsert=False)
 
-    return redirect(url_for('post.index'))
+    # return redirect(url_for('post.index'))
+    resp = jsonify(success=True)
+    return resp
 
 
 @bp.route('/<id>/unlike', methods=('POST',))
@@ -169,4 +171,7 @@ def unlike(id):
         }
     }, upsert=False)
 
-    return redirect(url_for('post.index'))
+    # return redirect(url_for('post.index'))
+    resp = jsonify(success=True)
+    return resp
+
