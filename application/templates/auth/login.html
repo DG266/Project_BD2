@@ -2,14 +2,18 @@
 
 {% block title %}Login{% endblock %}
 
+{% block optionalStyle %}<link href="/static/css/signin.css" rel="stylesheet">{% endblock %}
+
 {% block content %}
-<h1>Login</h1>
-<form method="post">
-    <label for="username">Username</label>
-    <input name="username" id="username" required>
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required>
-    <input type="submit" value="Login">
-</form>
+<div class="container">
+    <form class="form-signin" method="post">
+        <h2 class="form-signin-heading">Log Into Your Account</h2>
+        <label for="username" class="sr-only">Username</label>
+        <input type="text" name="username" id="username" class="form-control" placeholder="Username" required autofocus>
+        <label for="password" class="sr-only">Password</label>
+        <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+    </form>
+</div>
 {% endblock %}
 

@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <!-- SOURCE: https://www.w3schools.com/bootstrap/bootstrap_templates.asp -->
+<!--       : https://getbootstrap.com/docs/3.3/getting-started/          -->
 <title>{% block title %}{% endblock %} - Project_BD2</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/static/css/lib/bootstrap.min.css">
 <style>
-    /* Set black background color, white text and some padding */
+    html {
+        position: relative;
+        min-height: 100%;
+    }
+    body {
+        /* Margin bottom by footer height */
+        margin-bottom: 60px;
+    }
     footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        /* Set the fixed height of the footer here */
+        height: 60px;
         background-color: #555;
         color: white;
         padding: 15px;
     }
+
 </style>
+
+{% block optionalStyle %}{% endblock %}
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-inverse">
@@ -29,7 +43,7 @@
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/">Home</a></li>
-                <li><a href="#">Messages</a></li>
+                <li><a href="#">TODO</a></li>
             </ul>
             <form class="navbar-form navbar-right" role="search">
                 <div class="form-group input-group">
@@ -57,18 +71,22 @@
 
 <!-- PAGE-SPECIFIC CONTENT -->
 <section class="content">
-  {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
-  {% endfor %}
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+
   {% block content %}{% endblock %}
 </section>
 <!-- END PAGE-SPECIFIC CONTENT -->
 
 <!-- FOOTER -->
 <footer class="container-fluid text-center">
-    <p>To edit...</p>
+    <p>Progetto Basi di Dati II, Daniele Galloppo, Matricola 0522501594</p>
 </footer>
 <!-- END FOOTER -->
 
 <script src="/static/js/lib/jquery-3.7.0.min.js"></script>
+<script src="/static/js/lib/bootstrap.min.js"></script>
 <script src="/static/js/homepage.js"></script>

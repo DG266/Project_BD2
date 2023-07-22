@@ -16,13 +16,15 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
+        email = request.form['email']
         username = request.form['username']
         password = request.form['password']
 
         database = db.get_database()
         users = database["users"]
 
-        user_found = users.find_one({"username": username})
+        email_found = users.find_one({"email": email})
+        username_found = users.find_one({"username": username})
 
         error = None
 
@@ -31,11 +33,15 @@ def register():
         elif not password:
             error = 'Password is required.'
 
-        if user_found is not None:
-            error = 'Username already exists.'
+        if email_found is not None:
+            error = 'This email is already present.'
+
+        if username_found is not None:
+            error = 'This username already exists.'
 
         if error is None:
             new_user_id = users.insert_one({
+                'email': email,
                 'username': username,
                 'password': generate_password_hash(password)
             }).inserted_id

@@ -3,15 +3,15 @@
 {% block title %}Create a new post{% endblock %}
 
 {% block content %}
-<h3>Create a new post!</h3>
-<form method="post">
-    <label for="body">Content</label>
-    <br>
-    <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
-    <br>
-    <label for="tags">Tags (separate each tag with a comma)</label>
-    <br>
-    <textarea name="tags" id="tags">{{ request.form['tags'] }}</textarea>
-    <input type="submit" value="Post">
-</form>
+<div class="container">
+    <form method="post">
+        <h2 class="form-signin-heading">Create A New Post!</h2>
+        <label for="body">Content</label>
+        <textarea class="form-control" name="body" id="body" rows="6">{{ request.form['body'] }}</textarea>
+        <label for="tags">Tags (separate each tag with a comma)</label>
+        <textarea class="form-control" name="tags" id="tags" rows="3">{{ request.form['tags'] }}</textarea>
+        <br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Create Post</button>
+    </form>
+</div>
 {% endblock %}

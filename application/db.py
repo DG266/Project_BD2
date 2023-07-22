@@ -25,14 +25,17 @@ def init_db():
 
     user_ids = users_coll.insert_many([
         {
+            'email': 'dg266@mail.com',
             'username': 'DG266',
             'password': generate_password_hash('password')
         },
         {
+            'email': 'mariorossi@mail.com',
             'username': 'MarioRossi',
             'password': generate_password_hash('password')
         },
         {
+            'email': 'lucaverdi@mail.com',
             'username': 'LucaVerdi',
             'password': generate_password_hash('password')
         }
