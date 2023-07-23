@@ -11,6 +11,8 @@
         min-height: 100%;
     }
     body {
+        /* Add some padding on top of the body - if you don't do this, the fixed navbar covers some of the content */
+        padding-top: 70px;
         /* Margin bottom by footer height */
         margin-bottom: 60px;
     }
@@ -30,7 +32,7 @@
 {% block optionalStyle %}{% endblock %}
 
 <!-- NAVBAR -->
-<nav class="navbar navbar-inverse">
+<nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
@@ -43,7 +45,7 @@
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/">Home</a></li>
-                <li><a href="#">TODO</a></li>
+                <li><a href="{{ url_for('post.create') }}">Create a new post</a></li>
             </ul>
             <form class="navbar-form navbar-right" role="search">
                 <div class="form-group input-group">
@@ -82,11 +84,12 @@
 <!-- END PAGE-SPECIFIC CONTENT -->
 
 <!-- FOOTER -->
-<footer class="container-fluid text-center">
+<footer class="container-fluid text-center navbar-fixed-bottom">
     <p>Progetto Basi di Dati II, Daniele Galloppo, Matricola 0522501594</p>
 </footer>
 <!-- END FOOTER -->
 
 <script src="/static/js/lib/jquery-3.7.0.min.js"></script>
 <script src="/static/js/lib/bootstrap.min.js"></script>
+<script src="/static/js/lib/htmx.min.js"></script>
 <script src="/static/js/homepage.js"></script>

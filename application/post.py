@@ -1,9 +1,10 @@
 # See https://flask.palletsprojects.com/en/2.3.x/tutorial/
 
-from flask import g, Blueprint, flash, redirect, request, render_template, url_for, jsonify
+from flask import g, Blueprint, flash, redirect, request, render_template, url_for, jsonify, session
 from werkzeug.exceptions import abort
 from application.auth import login_required
-from application.db import get_posts, get_post, add_post, update_post, delete_post, like_post, unlike_post
+from application.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
+    like_post, unlike_post
 from bson import ObjectId
 
 import datetime
@@ -14,12 +15,42 @@ import pprint
 bp = Blueprint('post', __name__)
 
 
-@bp.route('/')
-def index():
-    # Get all posts (newest posts on top)
-    data = get_posts()
+# @bp.route('/')
+# def index():
+#     # Get all posts (newest posts on top)
+#     data = get_posts()
+#
+#     return render_template('post/index.html', posts=data)
 
-    return render_template('post/index.html', posts=data)
+@bp.route('/')
+@bp.route('/index')
+def index():
+    max_posts_per_page = 5
+
+    page = request.args.get('page', 0, type=int)
+    if page < 0:
+        page = 0
+
+    if page == 0:
+        data = get_posts(page, max_posts_per_page)
+        session['next_page'] = 1
+        session['last_date'] = data[max_posts_per_page - 1]['postedAt']
+
+        #print("Using get_posts")
+        #print("Number of elements retrieved: " + str(len(list(data.clone()))))
+        #print("Last post values - postedAt: " + str(data[max_posts_per_page - 1]['postedAt']) + " - username: " + str(data[max_posts_per_page - 1]['creator']['username']))
+
+        return render_template('post/index.html', posts=data)
+    else:
+        data = get_posts_with_last_date(max_posts_per_page, session['last_date'])
+        session['next_page'] = 1
+        session['last_date'] = data[max_posts_per_page - 1]['postedAt']
+
+        #print("Using get_posts_with_last_date")
+        #print("Number of elements retrieved: " + str(len(list(data.clone()))))
+        #print("Last post values - postedAt: " + str(data[max_posts_per_page - 1]['postedAt']) + " - username: " + str(data[max_posts_per_page - 1]['creator']['username']))
+
+        return render_template('post/partial_posts.html', posts=data)
 
 
 def clean_tags(tags_content):

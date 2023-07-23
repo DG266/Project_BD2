@@ -3,10 +3,12 @@ from pymongo import MongoClient
 from flask import current_app, g
 from werkzeug.local import LocalProxy
 from werkzeug.security import generate_password_hash
+from ast import literal_eval
 
+import pandas as pd
 import click
-
 import datetime
+import os
 
 
 def get_db():
@@ -62,8 +64,28 @@ def get_user_by_username(username):
 """ POSTS """
 
 
-def get_posts():
-    posts = db.posts.find({}).sort('postedAt', -1)
+# def get_posts():
+#     posts = db.posts.find({}).sort('postedAt', -1)
+#     return posts
+
+
+def get_posts(page_num, posts_per_page):
+    posts = db.posts.find({})\
+        .sort('postedAt', -1)\
+        .skip(page_num * posts_per_page)\
+        .limit(posts_per_page)
+    return posts
+
+
+def get_posts_with_last_date(posts_per_page, last_date):
+    posts = db.posts.find({
+        'postedAt': {
+            '$lt': last_date
+        }
+    })\
+        .sort('postedAt', -1)\
+        .limit(posts_per_page)
+
     return posts
 
 
@@ -132,53 +154,98 @@ def init_db():
     db.users.drop()
     db.posts.drop()
 
-    user_ids = db.users.insert_many([
-        {
-            'email': 'dg266@mail.com',
-            'username': 'DG266',
-            'password': generate_password_hash('password')
-        },
-        {
-            'email': 'mariorossi@mail.com',
-            'username': 'MarioRossi',
-            'password': generate_password_hash('password')
-        },
-        {
-            'email': 'lucaverdi@mail.com',
-            'username': 'LucaVerdi',
-            'password': generate_password_hash('password')
-        }
-    ]).inserted_ids
+    project_path = os.getcwd()
+    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
 
-    db.posts.insert_many([
-        {
-            'postedAt': datetime.datetime.now(),
-            'body': 'Hi there, I\'m testing this feature.',
+    # user_ids = db.users.insert_many([
+    #     {
+    #         'email': 'dg266@mail.com',
+    #         'username': 'DG266',
+    #         'password': generate_password_hash('password')
+    #     },
+    #     {
+    #         'email': 'mariorossi@mail.com',
+    #         'username': 'MarioRossi',
+    #         'password': generate_password_hash('password')
+    #     },
+    #     {
+    #         'email': 'lucaverdi@mail.com',
+    #         'username': 'LucaVerdi',
+    #         'password': generate_password_hash('password')
+    #     }
+    # ]).inserted_ids
+    #
+    # db.posts.insert_many([
+    #     {
+    #         'postedAt': datetime.datetime.now(),
+    #         'body': 'Hi there, I\'m testing this feature.',
+    #         'likes': [],
+    #         'tags': ['NewUser', 'Test'],
+    #         'creator': {
+    #             'username': 'DG266'
+    #         }
+    #     },
+    #     {
+    #         'postedAt': datetime.datetime.now(),
+    #         'body': 'Buongiorno da Mario!',
+    #         'likes': [],
+    #         'tags': ['NewUser', 'Buongiorno'],
+    #         'creator': {
+    #             'username': 'MarioRossi'
+    #         }
+    #     },
+    #     {
+    #         'postedAt': datetime.datetime.now(),
+    #         'body': 'Buonasera da Luca!',
+    #         'likes': [],
+    #         'tags': ['NewUser', 'Buonasera'],
+    #         'creator': {
+    #             'username': 'LucaVerdi'
+    #         }
+    #     }
+    # ])
+
+
+def insert_csv_values(csv_name):
+    # Clean dataset
+    df = pd.read_csv(csv_name)
+
+    df = df.drop(
+        columns=['user_followers', 'user_favourites', 'user_friends', 'user_verified', 'source', 'is_retweet'])
+
+    df = df.head(500)
+
+    # Replace 'NaN' with '[]'
+    df['hashtags'] = df['hashtags'].apply(lambda d: d if isinstance(d, str) else '[]')
+    df['hashtags'] = df['hashtags'].apply(literal_eval)
+
+    # Insert values
+    users_coll = db['users']
+    posts_coll = db['posts']
+
+    i = 0
+
+    for row in df.itertuples():
+        post_date = pd.to_datetime(row.date, format="%Y-%m-%d %H:%M:%S")
+
+        email = "email" + str(i) + "@mail.com"
+        i = i + 1
+
+        users_coll.insert_one({
+            'email': email,
+            'username': row.user_name,
+            'password': generate_password_hash('password')
+        })
+
+        posts_coll.insert_one({
+            'postedAt': post_date,
+            'body': row.text,
             'likes': [],
-            'tags': ['NewUser', 'Test'],
+            'tags': row.hashtags,
             'creator': {
-                'username': 'DG266'
+                'username': row.user_name
             }
-        },
-        {
-            'postedAt': datetime.datetime.now(),
-            'body': 'Buongiorno da Mario!',
-            'likes': [],
-            'tags': ['NewUser', 'Buongiorno'],
-            'creator': {
-                'username': 'MarioRossi'
-            }
-        },
-        {
-            'postedAt': datetime.datetime.now(),
-            'body': 'Buonasera da Luca!',
-            'likes': [],
-            'tags': ['NewUser', 'Buonasera'],
-            'creator': {
-                'username': 'LucaVerdi'
-            }
-        }
-    ])
+        })
 
 
 @click.command('init-db')

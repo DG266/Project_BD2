@@ -1,0 +1,51 @@
+{% for post in posts %}
+    {% if not loop.last %}
+        <div class="row">
+    {% else %}
+        <div class="row" hx-get="/index?page={{ session.next_page }}" hx-trigger="revealed" hx-swap="afterend">
+    {% endif %}
+
+        <div class="col-sm-3">
+            <div class="well">
+                <img src="/static/images/no-pic.png" class="img-circle" height="55" width="55" alt="Avatar">
+                <p>by {{ post.creator['username'] }} on {{ post['postedAt'].strftime('%Y-%m-%d') }}</p>
+                {% if post.creator['username'] == g.user['username'] %}
+                    <a class="btn btn-primary" href="{{ url_for('post.update', id=post['_id']) }}" role="button">Edit post</a>
+                    <form action="{{ url_for('post.delete', id=post['_id']) }}" method="post">
+                        <button class="btn btn-primary" type="submit" onclick="return confirm('Are you sure?');">Delete post</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-9">
+
+            <div class="well">
+                <p>{{ post['body'] }}</p>
+
+                <p>
+                    {% if post['tags']|length > 0 %}
+                        {% for tag in post['tags'] %}#{{ tag }} {% endfor %}
+                    {% endif %}
+                </p>
+
+                <p id="like-counter-{{ post['_id'] }}">Likes: {{ post.likes|length }}</p>
+                <div id="like-container">
+                    {% if g.user %}
+                        {% if g.user['_id'] in post.likes  %}
+                            <form action="{{ url_for('post.unlike', id=post['_id']) }}" method="post" class="unlike-form">
+                                <input type="hidden" name="id" value ="{{ post['_id'] }}">
+                                <button class="btn btn-primary unlike-button" type="submit">Unlike</button>
+                            </form>
+                        {% else %}
+                            <form action="{{ url_for('post.like', id=post['_id']) }}" method="post" class="like-form">
+                                <input type="hidden" name="id" value ="{{ post['_id'] }}">
+                                <button class="btn btn-primary like-button" type="submit">Like</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endfor %}
