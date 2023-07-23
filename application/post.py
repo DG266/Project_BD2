@@ -28,27 +28,31 @@ def index():
     max_posts_per_page = 5
 
     page = request.args.get('page', 0, type=int)
+
+    # Sanitize page value
     if page < 0:
         page = 0
 
+    # This happens when you go to the homepage
     if page == 0:
         data = get_posts(page, max_posts_per_page)
-        session['next_page'] = 1
-        session['last_date'] = data[max_posts_per_page - 1]['postedAt']
+        num_results = len(list(data.clone()))
+        print("Num. of results: " + str(num_results))
 
-        #print("Using get_posts")
-        #print("Number of elements retrieved: " + str(len(list(data.clone()))))
-        #print("Last post values - postedAt: " + str(data[max_posts_per_page - 1]['postedAt']) + " - username: " + str(data[max_posts_per_page - 1]['creator']['username']))
+        if num_results > 0:
+            session['next_page'] = 1
+            session['last_date'] = data[num_results - 1]['postedAt']
 
         return render_template('post/index.html', posts=data)
+    # This happens if you keep scrolling down
     else:
         data = get_posts_with_last_date(max_posts_per_page, session['last_date'])
-        session['next_page'] = 1
-        session['last_date'] = data[max_posts_per_page - 1]['postedAt']
+        num_results = len(list(data.clone()))
+        print("Num. of results: " + str(num_results))
 
-        #print("Using get_posts_with_last_date")
-        #print("Number of elements retrieved: " + str(len(list(data.clone()))))
-        #print("Last post values - postedAt: " + str(data[max_posts_per_page - 1]['postedAt']) + " - username: " + str(data[max_posts_per_page - 1]['creator']['username']))
+        if num_results > 0:
+            session['next_page'] = page + 1
+            session['last_date'] = data[num_results - 1]['postedAt']
 
         return render_template('post/partial_posts.html', posts=data)
 
