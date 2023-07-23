@@ -1,11 +1,8 @@
 # See https://flask.palletsprojects.com/en/2.3.x/tutorial/
 
 from flask import g, Blueprint, flash, redirect, request, render_template, url_for, session
-
+from application.db import add_user, get_user_by_id, get_user_by_email, get_user_by_username
 from werkzeug.security import check_password_hash, generate_password_hash
-
-from application import db
-
 from bson import ObjectId
 
 import functools
@@ -20,11 +17,8 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        database = db.get_database()
-        users = database["users"]
-
-        email_found = users.find_one({"email": email})
-        username_found = users.find_one({"username": username})
+        email_found = get_user_by_email(email)
+        username_found = get_user_by_username(username)
 
         error = None
 
@@ -40,11 +34,7 @@ def register():
             error = 'This username already exists.'
 
         if error is None:
-            new_user_id = users.insert_one({
-                'email': email,
-                'username': username,
-                'password': generate_password_hash(password)
-            }).inserted_id
+            new_user_id = add_user(email, username, generate_password_hash(password))
             print(f'New user registered. ID = {new_user_id}')
             return redirect(url_for("auth.login"))
 
@@ -59,10 +49,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        database = db.get_database()
-        users = database["users"]
-
-        user_found = users.find_one({"username": username})
+        user_found = get_user_by_username(username)
 
         error = None
 
@@ -90,9 +77,7 @@ def load_logged_in_user():    # runs before the view function, no matter what UR
     if user_id is None:
         g.user = None
     else:
-        database = db.get_database()
-        users = database["users"]
-        g.user = users.find_one({'_id': ObjectId(session['user_id'])})
+        g.user = get_user_by_id(ObjectId(session['user_id']))
 
 
 @bp.route('/logout')

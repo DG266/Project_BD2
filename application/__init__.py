@@ -1,9 +1,5 @@
-import os
-
-from flask import Flask, flash, request, render_template, redirect, url_for
-from pymongo import MongoClient
-
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import Flask
+from flask_pymongo import PyMongo
 
 
 def create_app(test_config=None):
@@ -13,10 +9,7 @@ def create_app(test_config=None):
         SECRET_KEY='dev'
     )
 
-    # Just a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    app.config["MONGO_URI"] = "mongodb://localhost:27017/test-database"
 
     from . import db
     db.init_app(app)

@@ -1,11 +1,9 @@
 # See https://flask.palletsprojects.com/en/2.3.x/tutorial/
+
 from flask import g, Blueprint, flash, redirect, request, render_template, url_for, jsonify
-
 from werkzeug.exceptions import abort
-
 from application.auth import login_required
-from application import db
-
+from application.db import get_posts, get_post, add_post, update_post, delete_post, like_post, unlike_post
 from bson import ObjectId
 
 import datetime
@@ -18,11 +16,8 @@ bp = Blueprint('post', __name__)
 
 @bp.route('/')
 def index():
-    database = db.get_database()
-    posts = database["posts"]
-
     # Get all posts (newest posts on top)
-    data = posts.find({}).sort('postedAt', -1)
+    data = get_posts()
 
     return render_template('post/index.html', posts=data)
 
@@ -56,17 +51,7 @@ def create():
         if error is not None:
             flash(error)
         else:
-            database = db.get_database()
-            posts_coll = database['posts']
-            posts_coll.insert_one({
-                'postedAt': datetime.datetime.now(),
-                'body': body,
-                'likes': [],
-                'tags': tags,
-                'creator': {
-                    'username': g.user['username']
-                }
-            })
+            add_post(datetime.datetime.now(), body, [], tags, {'username': g.user['username']})
 
             return redirect(url_for('post.index'))
 
@@ -85,9 +70,7 @@ def check_post(id_string, post, check_author=True):
 @bp.route('/<id>/update', methods=('GET', 'POST'))
 @login_required
 def update(id):
-    database = db.get_database()
-    posts_coll = database['posts']
-    post = posts_coll.find_one({'_id': ObjectId(id)})
+    post = get_post({'_id': ObjectId(id)})
     check_post(id, post)
 
     if request.method == 'POST':
@@ -107,14 +90,7 @@ def update(id):
         if error is not None:
             flash(error)
         else:
-            posts_coll.update_one({
-                '_id': ObjectId(id)
-            }, {
-                '$set': {
-                    'body': updated_body,
-                    'tags': updated_tags
-                }
-            }, upsert=False)
+            up_result = update_post(ObjectId(id), updated_body, updated_tags)
 
             return redirect(url_for('post.index'))
 
@@ -124,12 +100,10 @@ def update(id):
 @bp.route('/<id>/delete', methods=('POST',))
 @login_required
 def delete(id):
-    database = db.get_database()
-    posts_coll = database['posts']
-    post = posts_coll.find_one({'_id': ObjectId(id)})
+    post = get_post({'_id': ObjectId(id)})
     check_post(id, post)
 
-    posts_coll.delete_one({'_id': ObjectId(id)})
+    del_result = delete_post(ObjectId(id))
 
     return redirect(url_for('post.index'))
 
@@ -137,18 +111,10 @@ def delete(id):
 @bp.route('/<id>/like', methods=('POST',))
 @login_required
 def like(id):
-    database = db.get_database()
-    posts_coll = database['posts']
-    post = posts_coll.find_one({'_id': ObjectId(id)})
+    post = get_post({'_id': ObjectId(id)})
     check_post(id, post, False)
 
-    posts_coll.update_one({
-        '_id': ObjectId(id)
-    }, {
-        '$addToSet': {
-            'likes': g.user["_id"]
-        }
-    }, upsert=False)
+    like_result = like_post(ObjectId(id), g.user['_id'])
 
     # return redirect(url_for('post.index'))
     resp = jsonify(success=True)
@@ -158,18 +124,10 @@ def like(id):
 @bp.route('/<id>/unlike', methods=('POST',))
 @login_required
 def unlike(id):
-    database = db.get_database()
-    posts_coll = database['posts']
-    post = posts_coll.find_one({'_id': ObjectId(id)})
+    post = get_post({'_id': ObjectId(id)})
     check_post(id, post, False)
 
-    posts_coll.update_one({
-        '_id': ObjectId(id)
-    }, {
-        '$pull': {
-            'likes': g.user["_id"]
-        }
-    }, upsert=False)
+    unlike_result = unlike_post(ObjectId(id), g.user['_id'])
 
     # return redirect(url_for('post.index'))
     resp = jsonify(success=True)
