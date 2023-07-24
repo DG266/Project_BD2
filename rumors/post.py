@@ -2,8 +2,8 @@
 
 from flask import g, Blueprint, flash, redirect, request, render_template, url_for, jsonify, session
 from werkzeug.exceptions import abort
-from application.auth import login_required
-from application.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
+from rumors.auth import login_required
+from rumors.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
     like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour, get_posts_by_tags
 from bson import ObjectId
 

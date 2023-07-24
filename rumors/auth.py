@@ -1,7 +1,7 @@
 # See https://flask.palletsprojects.com/en/2.3.x/tutorial/
 
 from flask import g, Blueprint, flash, redirect, request, render_template, url_for, session
-from application.db import add_user, get_user_by_id, get_user_by_email, get_user_by_username
+from rumors.db import add_user, get_user_by_id, get_user_by_email, get_user_by_username
 from werkzeug.security import check_password_hash, generate_password_hash
 from bson import ObjectId
 
