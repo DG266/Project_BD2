@@ -2,7 +2,11 @@
     {% if not loop.last %}
         <div class="row">
     {% else %}
-        <div class="row" hx-get="/index?page={{ session.next_page }}" hx-trigger="revealed" hx-swap="afterend">
+        {% if is_homepage %}
+            <div class="row" hx-get="/index?page={{ session.next_page }}" hx-trigger="revealed" hx-swap="afterend">
+        {% else %}
+
+        {% endif %}
     {% endif %}
 
         <div class="col-sm-3">

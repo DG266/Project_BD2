@@ -90,6 +90,15 @@ def get_posts_with_last_date(posts_per_page, last_date):
     return posts
 
 
+def get_posts_by_tags(query_tags):
+    tagged_posts = db.posts.find({
+        'tags': {
+            '$all': query_tags
+        }
+    })
+    return tagged_posts
+
+
 def get_post(post_id):
     post = db.posts.find_one(post_id)
     return post
@@ -221,10 +230,10 @@ def init_db():
     db.posts.drop()
     db.likes.drop()
 
-    # project_path = os.getcwd()
-    # insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
+    project_path = os.getcwd()
+    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
 
-    insert_example_values()
+    # insert_example_values()
 
 
 def insert_example_values():
@@ -290,7 +299,7 @@ def insert_csv_values(csv_name):
     df = df.drop(
         columns=['user_followers', 'user_favourites', 'user_friends', 'user_verified', 'source', 'is_retweet'])
 
-    df = df.head(20)
+    df = df.head(1000)
 
     # Replace 'NaN' with '[]'
     df['hashtags'] = df['hashtags'].apply(lambda d: d if isinstance(d, str) else '[]')

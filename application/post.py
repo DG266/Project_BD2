@@ -4,7 +4,7 @@ from flask import g, Blueprint, flash, redirect, request, render_template, url_f
 from werkzeug.exceptions import abort
 from application.auth import login_required
 from application.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
-    like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour
+    like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour, get_posts_by_tags
 from bson import ObjectId
 
 import datetime
@@ -30,11 +30,7 @@ def index():
 
     page = request.args.get('page', 0, type=int)
 
-    user_liked_posts = []
-    if g.user is not None:
-        data = get_user_likes(g.user['_id'])
-        for like_data in data:
-            user_liked_posts.append(like_data['postId'])
+    user_liked_posts = get_user_liked_posts()
 
     # Sanitize page value
     if page < 0:
@@ -50,7 +46,7 @@ def index():
             session['next_page'] = 1
             session['last_date'] = posts_data[num_results - 1]['postedAt']
 
-        return render_template('post/index.html', posts=posts_data, user_liked_posts=user_liked_posts)
+        return render_template('post/index.html', is_homepage=True, posts=posts_data, user_liked_posts=user_liked_posts)
     # This happens if you keep scrolling down
     else:
         posts_data = get_posts_with_last_date(max_posts_per_page, session['last_date'])
@@ -61,7 +57,7 @@ def index():
             session['next_page'] = page + 1
             session['last_date'] = posts_data[num_results - 1]['postedAt']
 
-        return render_template('post/partial_posts.html', posts=posts_data, user_liked_posts=user_liked_posts)
+        return render_template('post/partial_posts.html', is_homepage=True, posts=posts_data, user_liked_posts=user_liked_posts)
 
 
 def clean_tags(tags_content):
@@ -93,7 +89,7 @@ def create():
         if error is not None:
             flash(error)
         else:
-            add_post(datetime.datetime.now(), body, [], tags, {'username': g.user['username']})
+            add_post(datetime.datetime.now(), body, 0, tags, {'username': g.user['username']})
 
             return redirect(url_for('post.index'))
 
@@ -150,6 +146,16 @@ def delete(id):
     return redirect(url_for('post.index'))
 
 
+def get_user_liked_posts():
+    user_liked_posts = []
+    if g.user is not None:
+        data = get_user_likes(g.user['_id'])
+        for like_data in data:
+            user_liked_posts.append(like_data['postId'])
+
+    return user_liked_posts
+
+
 @bp.route('/<id>/like', methods=('POST',))
 @login_required
 def like(id):
@@ -185,12 +191,21 @@ def trending():
     for trending_post in trending_posts:
         posts.append(trending_post['post'][0])
 
-    user_liked_posts = []
-    if g.user is not None:
-        data = get_user_likes(g.user['_id'])
-        for like_data in data:
-            user_liked_posts.append(like_data['postId'])
+    user_liked_posts = get_user_liked_posts()
 
-    return render_template('post/index.html', posts=posts, user_liked_posts=user_liked_posts)
+    return render_template('post/index.html', is_homepage = False, posts=posts, user_liked_posts=user_liked_posts)
 
 
+@bp.route('/search', methods=('GET',))
+def search():
+    query = request.args.get('query')
+    print(query)
+
+    query_tags = clean_tags(query)
+    print(query_tags)
+
+    tagged_posts = get_posts_by_tags(query_tags)
+
+    user_liked_posts = get_user_liked_posts()
+
+    return render_template('post/index.html', is_homepage = False, posts=tagged_posts, user_liked_posts=user_liked_posts)
