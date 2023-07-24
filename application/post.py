@@ -4,7 +4,7 @@ from flask import g, Blueprint, flash, redirect, request, render_template, url_f
 from werkzeug.exceptions import abort
 from application.auth import login_required
 from application.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
-    like_post, unlike_post
+    like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour
 from bson import ObjectId
 
 import datetime
@@ -22,6 +22,7 @@ bp = Blueprint('post', __name__)
 #
 #     return render_template('post/index.html', posts=data)
 
+
 @bp.route('/')
 @bp.route('/index')
 def index():
@@ -29,32 +30,38 @@ def index():
 
     page = request.args.get('page', 0, type=int)
 
+    user_liked_posts = []
+    if g.user is not None:
+        data = get_user_likes(g.user['_id'])
+        for like_data in data:
+            user_liked_posts.append(like_data['postId'])
+
     # Sanitize page value
     if page < 0:
         page = 0
 
     # This happens when you go to the homepage
     if page == 0:
-        data = get_posts(page, max_posts_per_page)
-        num_results = len(list(data.clone()))
+        posts_data = get_posts(page, max_posts_per_page)
+        num_results = len(list(posts_data.clone()))
         print("Num. of results: " + str(num_results))
 
         if num_results > 0:
             session['next_page'] = 1
-            session['last_date'] = data[num_results - 1]['postedAt']
+            session['last_date'] = posts_data[num_results - 1]['postedAt']
 
-        return render_template('post/index.html', posts=data)
+        return render_template('post/index.html', posts=posts_data, user_liked_posts=user_liked_posts)
     # This happens if you keep scrolling down
     else:
-        data = get_posts_with_last_date(max_posts_per_page, session['last_date'])
-        num_results = len(list(data.clone()))
+        posts_data = get_posts_with_last_date(max_posts_per_page, session['last_date'])
+        num_results = len(list(posts_data.clone()))
         print("Num. of results: " + str(num_results))
 
         if num_results > 0:
             session['next_page'] = page + 1
-            session['last_date'] = data[num_results - 1]['postedAt']
+            session['last_date'] = posts_data[num_results - 1]['postedAt']
 
-        return render_template('post/partial_posts.html', posts=data)
+        return render_template('post/partial_posts.html', posts=posts_data, user_liked_posts=user_liked_posts)
 
 
 def clean_tags(tags_content):
@@ -149,7 +156,8 @@ def like(id):
     post = get_post({'_id': ObjectId(id)})
     check_post(id, post, False)
 
-    like_result = like_post(ObjectId(id), g.user['_id'])
+    post_like_result = like_post(ObjectId(id), post['likes'])
+    like_result = add_like(ObjectId(id), g.user['_id'])
 
     # return redirect(url_for('post.index'))
     resp = jsonify(success=True)
@@ -162,9 +170,27 @@ def unlike(id):
     post = get_post({'_id': ObjectId(id)})
     check_post(id, post, False)
 
-    unlike_result = unlike_post(ObjectId(id), g.user['_id'])
+    post_unlike_result = unlike_post(ObjectId(id), post['likes'])
+    unlike_result = delete_like(ObjectId(id), g.user['_id'])
 
     # return redirect(url_for('post.index'))
     resp = jsonify(success=True)
     return resp
+
+
+@bp.route('/trending', methods=('GET',))
+def trending():
+    trending_posts = get_most_liked_last_hour(10)
+    posts = []
+    for trending_post in trending_posts:
+        posts.append(trending_post['post'][0])
+
+    user_liked_posts = []
+    if g.user is not None:
+        data = get_user_likes(g.user['_id'])
+        for like_data in data:
+            user_liked_posts.append(like_data['postId'])
+
+    return render_template('post/index.html', posts=posts, user_liked_posts=user_liked_posts)
+
 

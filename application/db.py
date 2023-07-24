@@ -4,6 +4,7 @@ from flask import current_app, g
 from werkzeug.local import LocalProxy
 from werkzeug.security import generate_password_hash
 from ast import literal_eval
+from datetime import datetime, tzinfo, timezone
 
 import pandas as pd
 import click
@@ -118,30 +119,6 @@ def update_post(post_id, body, tags):
     return response
 
 
-def like_post(post_id, user_id):
-    response = db.posts.update_one({
-        '_id': post_id
-    }, {
-        '$addToSet': {
-            'likes': user_id
-        }
-    })
-
-    return response
-
-
-def unlike_post(post_id, user_id):
-    response = db.posts.update_one({
-        '_id': post_id
-    }, {
-        '$pull': {
-            'likes': user_id
-        }
-    })
-
-    return response
-
-
 def delete_post(post_id):
     response = db.posts.delete_one({
         '_id': post_id
@@ -150,60 +127,160 @@ def delete_post(post_id):
     return response
 
 
+def like_post(post_id, current_num_of_likes):
+    response = db.posts.update_one({
+        '_id': post_id
+    }, {
+        '$set': {
+            'likes': current_num_of_likes + 1
+        }
+    })
+
+    return response
+
+
+def unlike_post(post_id, current_num_of_likes):
+    response = db.posts.update_one({
+        '_id': post_id
+    }, {
+        '$set': {
+            'likes': current_num_of_likes - 1
+        }
+    })
+
+    return response
+
+
+def add_like(post_id, user_id):
+    like_doc = {
+        'postId': post_id,
+        'userId': user_id,
+        'likedAt': datetime.datetime.now()
+    }
+
+    return db.likes.insert_one(like_doc)
+
+
+def delete_like(post_id, user_id):
+    response = db.likes.delete_one({
+        'postId': post_id,
+        'userId': user_id
+    })
+
+    return response
+
+
+def get_user_likes(user_id):
+    user_likes = db.likes.find({
+        'userId': user_id
+    })
+
+    return user_likes
+
+
+def get_most_liked_last_hour(limit):
+    now = datetime.datetime.now()
+    last_hour_date_time = now - datetime.timedelta(hours=1)
+
+    trending_posts = db.likes.aggregate([
+        {
+            '$match': {
+                'likedAt': {
+                    '$gte': last_hour_date_time,
+                    '$lte': now
+                }
+            }
+        }, {
+            '$group': {
+                '_id': '$postId',
+                'totalLikes': {
+                    '$sum': 1
+                }
+            }
+        }, {
+            '$sort': {
+                'totalLikes': -1
+            }
+        }, {
+            '$limit': limit
+        }, {
+            '$lookup': {
+                'from': 'posts',
+                'localField': '_id',
+                'foreignField': '_id',
+                'as': 'post'
+            }
+        }
+    ])
+
+    return trending_posts
+
+
 def init_db():
     db.users.drop()
     db.posts.drop()
+    db.likes.drop()
 
-    project_path = os.getcwd()
-    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
+    # project_path = os.getcwd()
+    # insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
 
-    # user_ids = db.users.insert_many([
-    #     {
-    #         'email': 'dg266@mail.com',
-    #         'username': 'DG266',
-    #         'password': generate_password_hash('password')
-    #     },
-    #     {
-    #         'email': 'mariorossi@mail.com',
-    #         'username': 'MarioRossi',
-    #         'password': generate_password_hash('password')
-    #     },
-    #     {
-    #         'email': 'lucaverdi@mail.com',
-    #         'username': 'LucaVerdi',
-    #         'password': generate_password_hash('password')
-    #     }
-    # ]).inserted_ids
-    #
-    # db.posts.insert_many([
-    #     {
-    #         'postedAt': datetime.datetime.now(),
-    #         'body': 'Hi there, I\'m testing this feature.',
-    #         'likes': [],
-    #         'tags': ['NewUser', 'Test'],
-    #         'creator': {
-    #             'username': 'DG266'
-    #         }
-    #     },
-    #     {
-    #         'postedAt': datetime.datetime.now(),
-    #         'body': 'Buongiorno da Mario!',
-    #         'likes': [],
-    #         'tags': ['NewUser', 'Buongiorno'],
-    #         'creator': {
-    #             'username': 'MarioRossi'
-    #         }
-    #     },
-    #     {
-    #         'postedAt': datetime.datetime.now(),
-    #         'body': 'Buonasera da Luca!',
-    #         'likes': [],
-    #         'tags': ['NewUser', 'Buonasera'],
-    #         'creator': {
-    #             'username': 'LucaVerdi'
-    #         }
-    #     }
-    # ])
+    insert_example_values()
+
+
+def insert_example_values():
+    user_ids = db.users.insert_many([
+        {
+            'email': 'dg266@mail.com',
+            'username': 'DG266',
+            'password': generate_password_hash('password')
+        },
+        {
+            'email': 'mariorossi@mail.com',
+            'username': 'MarioRossi',
+            'password': generate_password_hash('password')
+        },
+        {
+            'email': 'lucaverdi@mail.com',
+            'username': 'LucaVerdi',
+            'password': generate_password_hash('password')
+        }
+    ]).inserted_ids
+
+    post_ids = db.posts.insert_many([
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Hi there, I\'m testing this feature.',
+            'likes': 1,
+            'tags': ['NewUser', 'Test'],
+            'creator': {
+                'username': 'DG266'
+            }
+        },
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Buongiorno da Mario!',
+            'likes': 0,
+            'tags': ['NewUser', 'Buongiorno'],
+            'creator': {
+                'username': 'MarioRossi'
+            }
+        },
+        {
+            'postedAt': datetime.datetime.now(),
+            'body': 'Buonasera da Luca!',
+            'likes': 0,
+            'tags': ['NewUser', 'Buonasera'],
+            'creator': {
+                'username': 'LucaVerdi'
+            }
+        }
+    ]).inserted_ids
+
+    db.likes.insert_one({
+        'postId': post_ids[0],
+        'userId': user_ids[0],
+        'likedAt': datetime.datetime.now()
+    })
 
 
 def insert_csv_values(csv_name):
@@ -213,7 +290,7 @@ def insert_csv_values(csv_name):
     df = df.drop(
         columns=['user_followers', 'user_favourites', 'user_friends', 'user_verified', 'source', 'is_retweet'])
 
-    df = df.head(500)
+    df = df.head(20)
 
     # Replace 'NaN' with '[]'
     df['hashtags'] = df['hashtags'].apply(lambda d: d if isinstance(d, str) else '[]')
@@ -240,7 +317,7 @@ def insert_csv_values(csv_name):
         posts_coll.insert_one({
             'postedAt': post_date,
             'body': row.text,
-            'likes': [],
+            'likes': 0,
             'tags': row.hashtags,
             'creator': {
                 'username': row.user_name

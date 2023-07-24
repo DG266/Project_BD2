@@ -28,10 +28,10 @@
                     {% endif %}
                 </p>
 
-                <p id="like-counter-{{ post['_id'] }}">Likes: {{ post.likes|length }}</p>
+                <p id="like-counter-{{ post['_id'] }}">Likes: {{ post['likes'] }}</p>
                 <div id="like-container">
                     {% if g.user %}
-                        {% if g.user['_id'] in post.likes  %}
+                        {% if post['_id'] in user_liked_posts  %}
                             <form action="{{ url_for('post.unlike', id=post['_id']) }}" method="post" class="unlike-form">
                                 <input type="hidden" name="id" value ="{{ post['_id'] }}">
                                 <button class="btn btn-primary unlike-button" type="submit">Unlike</button>
