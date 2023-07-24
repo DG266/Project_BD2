@@ -12,7 +12,7 @@
         <div class="col-sm-3">
             <div class="well">
                 <img src="/static/images/no-pic.png" class="img-circle" height="55" width="55" alt="Avatar">
-                <p>by {{ post.creator['username'] }} on {{ post['postedAt'].strftime('%Y-%m-%d') }}</p>
+                <p>by {{ post.creator['username'] }} on {{ post['postedAt'].strftime('%Y-%m-%d, %H:%M') }}</p>
                 {% if post.creator['username'] == g.user['username'] %}
                     <a class="btn btn-primary" href="{{ url_for('post.update', id=post['_id']) }}" role="button">Edit post</a>
                     <form action="{{ url_for('post.delete', id=post['_id']) }}" method="post">

@@ -186,7 +186,8 @@ def unlike(id):
 
 @bp.route('/trending', methods=('GET',))
 def trending():
-    trending_posts = get_most_liked_last_hour(10)
+    limit = 10
+    trending_posts = get_most_liked_last_hour(limit)
     posts = []
     for trending_post in trending_posts:
         posts.append(trending_post['post'][0])
