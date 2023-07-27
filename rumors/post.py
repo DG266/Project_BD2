@@ -4,7 +4,8 @@ from flask import g, Blueprint, flash, redirect, request, render_template, url_f
 from werkzeug.exceptions import abort
 from rumors.auth import login_required
 from rumors.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
-    like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour, get_posts_by_tags
+    like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour, get_posts_by_tags,\
+    delete_all_likes
 from bson import ObjectId
 
 import datetime
@@ -142,6 +143,7 @@ def delete(id):
     check_post(id, post)
 
     del_result = delete_post(ObjectId(id))
+    del_likes_result = delete_all_likes(ObjectId(id))
 
     return redirect(url_for('post.index'))
 

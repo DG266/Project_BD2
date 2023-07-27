@@ -1,5 +1,6 @@
+import json
+
 from flask_pymongo import PyMongo
-from pymongo import MongoClient
 from flask import current_app, g
 from werkzeug.local import LocalProxy
 from werkzeug.security import generate_password_hash
@@ -179,6 +180,14 @@ def delete_like(post_id, user_id):
     return response
 
 
+def delete_all_likes(post_id):
+    response = db.likes.delete_many({
+        'postId': post_id,
+    })
+
+    return response
+
+
 def get_user_likes(user_id):
     user_likes = db.likes.find({
         'userId': user_id
@@ -232,6 +241,7 @@ def init_db():
 
     project_path = os.getcwd()
     insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
+    insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"))
 
     # insert_example_values()
 
@@ -299,7 +309,9 @@ def insert_csv_values(csv_name):
     df = df.drop(
         columns=['user_followers', 'user_favourites', 'user_friends', 'user_verified', 'source', 'is_retweet'])
 
-    df = df.head(1000)
+    df = df.drop_duplicates(subset=['user_name'], keep='first')
+
+    df = df.head(100)
 
     # Replace 'NaN' with '[]'
     df['hashtags'] = df['hashtags'].apply(lambda d: d if isinstance(d, str) else '[]')
@@ -330,6 +342,61 @@ def insert_csv_values(csv_name):
             'tags': row.hashtags,
             'creator': {
                 'username': row.user_name
+            }
+        })
+
+
+def clean_json(x):
+    return json.loads(x)
+
+
+def insert_other_csv_values(csv_name):
+    # Clean dataset
+    df = pd.read_csv(csv_name)
+    df = df.replace({'\'': '"'}, regex=True)
+
+    df.drop(columns=df.columns[0], axis=1, inplace=True)
+    df = df.drop(
+        columns=['userid', 'location', 'following', 'followers', 'totaltweets', 'tweetid', 'retweetcount', 'language',
+                 'coordinates', 'favorite_count']
+    )
+
+    df = df.drop_duplicates(subset=['username'], keep='first')
+    df = df.drop_duplicates(subset=['tweetcreatedts'], keep='first')
+
+    df = df.head(100)
+
+    df['hashtags'] = df['hashtags'].apply(clean_json)
+
+    # Insert values
+    users_coll = db['users']
+    posts_coll = db['posts']
+
+    i = 1000
+
+    for row in df.itertuples():
+        hashtags = []
+        for json_elem in row.hashtags:
+            hashtags.append(json_elem['text'])
+
+        post_date = pd.to_datetime(row.tweetcreatedts, format="%Y-%m-%d %H:%M:%S.%f")
+
+        email = "email" + str(i) + "@mail.com"
+        i = i + 1
+
+        users_coll.insert_one({
+            'email': email,
+            'username': row.username,
+            'password': generate_password_hash('password')
+        })
+
+        posts_coll.insert_one({
+            'postedAt': post_date,
+            'body': row.text,
+            'likes': 0,
+            'tags': hashtags,
+            'creator': {
+                'username': row.username
             }
         })
 
