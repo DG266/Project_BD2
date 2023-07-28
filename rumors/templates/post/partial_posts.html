@@ -25,9 +25,9 @@
 
             <div class="well">
                 <p>{{ post['body'] }}</p>
-                    Tags:
                 <p>
                     {% if post['tags']|length > 0 %}
+                        Tags:
                         {% for tag in post['tags'] %}#{{ tag }} {% endfor %}
                     {% endif %}
                 </p>
