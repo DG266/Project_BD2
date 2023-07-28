@@ -33,7 +33,8 @@ def add_user(email, username, password):
     user_doc = {
         'email': email,
         'username': username,
-        'password': password
+        'password': password,
+        'joinedAt': datetime.datetime.now()
     }
 
     return db.users.insert_one(user_doc)
@@ -92,11 +93,13 @@ def get_posts_with_last_date(posts_per_page, last_date):
 
 
 def get_posts_by_tags(query_tags):
+    query_tags = [x.lower() for x in query_tags]
     tagged_posts = db.posts.find({
-        'tags': {
-            '$all': query_tags
+        'tags_lc': {
+            '$in': query_tags
         }
-    })
+    }).sort('postedAt', -1)
+
     return tagged_posts
 
 
@@ -242,7 +245,6 @@ def init_db():
     project_path = os.getcwd()
     insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
     insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"))
-
     # insert_example_values()
 
 
@@ -251,17 +253,20 @@ def insert_example_values():
         {
             'email': 'dg266@mail.com',
             'username': 'DG266',
-            'password': generate_password_hash('password')
+            'password': generate_password_hash('password'),
+            'joinedAt': datetime.datetime.now()
         },
         {
             'email': 'mariorossi@mail.com',
             'username': 'MarioRossi',
-            'password': generate_password_hash('password')
+            'password': generate_password_hash('password'),
+            'joinedAt': datetime.datetime.now()
         },
         {
             'email': 'lucaverdi@mail.com',
             'username': 'LucaVerdi',
-            'password': generate_password_hash('password')
+            'password': generate_password_hash('password'),
+            'joinedAt': datetime.datetime.now()
         }
     ]).inserted_ids
 
@@ -271,6 +276,7 @@ def insert_example_values():
             'body': 'Hi there, I\'m testing this feature.',
             'likes': 1,
             'tags': ['NewUser', 'Test'],
+            'tags_lc': ['newuser', 'test'],
             'creator': {
                 'username': 'DG266'
             }
@@ -280,6 +286,7 @@ def insert_example_values():
             'body': 'Buongiorno da Mario!',
             'likes': 0,
             'tags': ['NewUser', 'Buongiorno'],
+            'tags_lc': ['newuser', 'buongiorno'],
             'creator': {
                 'username': 'MarioRossi'
             }
@@ -289,6 +296,7 @@ def insert_example_values():
             'body': 'Buonasera da Luca!',
             'likes': 0,
             'tags': ['NewUser', 'Buonasera'],
+            'tags_lc': ['newuser', 'buonasera'],
             'creator': {
                 'username': 'LucaVerdi'
             }
@@ -307,7 +315,15 @@ def insert_csv_values(csv_name):
     df = pd.read_csv(csv_name)
 
     df = df.drop(
-        columns=['user_followers', 'user_favourites', 'user_friends', 'user_verified', 'source', 'is_retweet'])
+        columns=['user_location',
+                 'user_description',
+                 'user_followers',
+                 'user_friends',
+                 'user_favourites',
+                 'user_verified',
+                 'source',
+                 'is_retweet']
+    )
 
     df = df.drop_duplicates(subset=['user_name'], keep='first')
 
@@ -325,6 +341,7 @@ def insert_csv_values(csv_name):
 
     for row in df.itertuples():
         post_date = pd.to_datetime(row.date, format="%Y-%m-%d %H:%M:%S")
+        join_date = pd.to_datetime(row.user_created, format="%Y-%m-%d %H:%M:%S")
 
         email = "email" + str(i) + "@mail.com"
         i = i + 1
@@ -332,7 +349,8 @@ def insert_csv_values(csv_name):
         users_coll.insert_one({
             'email': email,
             'username': row.user_name,
-            'password': generate_password_hash('password')
+            'password': generate_password_hash('password'),
+            'joinedAt': join_date
         })
 
         posts_coll.insert_one({
@@ -340,6 +358,7 @@ def insert_csv_values(csv_name):
             'body': row.text,
             'likes': 0,
             'tags': row.hashtags,
+            'tags_lc': [x.lower() for x in row.hashtags],
             'creator': {
                 'username': row.user_name
             }
@@ -357,8 +376,18 @@ def insert_other_csv_values(csv_name):
 
     df.drop(columns=df.columns[0], axis=1, inplace=True)
     df = df.drop(
-        columns=['userid', 'location', 'following', 'followers', 'totaltweets', 'tweetid', 'retweetcount', 'language',
-                 'coordinates', 'favorite_count']
+        columns=['userid',
+                 'acctdesc',
+                 'location',
+                 'following',
+                 'followers',
+                 'totaltweets',
+                 'tweetid',
+                 'retweetcount',
+                 'language',
+                 'coordinates',
+                 'favorite_count',
+                 'extractedts']
     )
 
     df = df.drop_duplicates(subset=['username'], keep='first')
@@ -380,6 +409,7 @@ def insert_other_csv_values(csv_name):
             hashtags.append(json_elem['text'])
 
         post_date = pd.to_datetime(row.tweetcreatedts, format="%Y-%m-%d %H:%M:%S.%f")
+        join_date = pd.to_datetime(row.usercreatedts, format="%Y-%m-%d %H:%M:%S.%f")
 
         email = "email" + str(i) + "@mail.com"
         i = i + 1
@@ -387,7 +417,8 @@ def insert_other_csv_values(csv_name):
         users_coll.insert_one({
             'email': email,
             'username': row.username,
-            'password': generate_password_hash('password')
+            'password': generate_password_hash('password'),
+            'joinedAt': join_date
         })
 
         posts_coll.insert_one({
@@ -395,6 +426,7 @@ def insert_other_csv_values(csv_name):
             'body': row.text,
             'likes': 0,
             'tags': hashtags,
+            'tags_lc': [x.lower() for x in hashtags],
             'creator': {
                 'username': row.username
             }
