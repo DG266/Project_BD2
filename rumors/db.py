@@ -114,6 +114,7 @@ def add_post(posted_at, body, likes, tags, creator):
         'body': body,
         'likes': likes,
         'tags': tags,
+        'tags_lc': [x.lower() for x in tags],
         'creator': creator
     }
     return db.posts.insert_one(post_doc)
@@ -125,7 +126,8 @@ def update_post(post_id, body, tags):
     }, {
         '$set': {
             'body': body,
-            'tags': tags
+            'tags': tags,
+            'tags_lc': [x.lower() for x in tags],
         }
     })
 
