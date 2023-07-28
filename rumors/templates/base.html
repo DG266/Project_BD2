@@ -45,7 +45,7 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-                {% if request.path == '/' %}<li class="active">{% else %}<li>{% endif %}<a href="/">Home</a></li>
+                {% if request.path == '/' or request.path == '/index' %}<li class="active">{% else %}<li>{% endif %}<a href="/">Home</a></li>
                 {% if request.path == '/create' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.create') }}">Create a new post</a></li>
                 {% if request.path == '/trending' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.trending') }}">Trending posts</a></li>
                 {% if request.path == '/latest' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.latest') }}">Latest (15 min) posts</a></li>
