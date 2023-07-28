@@ -1,5 +1,3 @@
-import json
-
 from flask_pymongo import PyMongo
 from flask import current_app, g
 from werkzeug.local import LocalProxy
@@ -11,7 +9,8 @@ import pandas as pd
 import click
 import datetime
 import os
-
+import json
+import pymongo
 
 def get_db():
     db = getattr(g, "_database", None)
@@ -266,14 +265,20 @@ def get_post_number(author_username):
 
 
 def init_db():
+    # Delete everything
     db.users.drop()
     db.posts.drop()
     db.likes.drop()
 
+    # Insert data
     project_path = os.getcwd()
-    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"))
-    insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"))
-    # insert_example_values()
+    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"), 1000)
+    insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"), 1000)
+    insert_example_values()
+
+    # Create indices
+    db.posts.create_index([('postedAt', pymongo.DESCENDING)])
+    db.likes.create_index([('likedAt', pymongo.DESCENDING)])
 
 
 def insert_example_values():
@@ -338,7 +343,7 @@ def insert_example_values():
     })
 
 
-def insert_csv_values(csv_name):
+def insert_csv_values(csv_name, num):
     # Clean dataset
     df = pd.read_csv(csv_name)
 
@@ -355,7 +360,7 @@ def insert_csv_values(csv_name):
 
     df = df.drop_duplicates(subset=['user_name'], keep='first')
 
-    df = df.head(100)
+    df = df.head(num)
 
     # Replace 'NaN' with '[]'
     df['hashtags'] = df['hashtags'].apply(lambda d: d if isinstance(d, str) else '[]')
@@ -397,7 +402,7 @@ def clean_json(x):
     return json.loads(x)
 
 
-def insert_other_csv_values(csv_name):
+def insert_other_csv_values(csv_name, num):
     # Clean dataset
     df = pd.read_csv(csv_name)
     df = df.replace({'\'': '"'}, regex=True)
@@ -421,7 +426,7 @@ def insert_other_csv_values(csv_name):
     df = df.drop_duplicates(subset=['username'], keep='first')
     df = df.drop_duplicates(subset=['tweetcreatedts'], keep='first')
 
-    df = df.head(100)
+    df = df.head(num)
 
     df['hashtags'] = df['hashtags'].apply(clean_json)
 
