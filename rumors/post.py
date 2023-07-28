@@ -87,6 +87,9 @@ def create():
         if not body:
             error = 'Content is required.'
 
+        if len(body) > 280:
+            error = 'You have surpassed the limit of 280 characters.'
+
         if error is not None:
             flash(error)
         else:
