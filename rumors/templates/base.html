@@ -45,9 +45,21 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/">Home</a></li>
-                <li><a href="{{ url_for('post.create') }}">Create a new post</a></li>
-                <li><a href="{{ url_for('post.trending') }}">Trending posts</a></li>
+                {% if request.path == '/' %}
+                    <li class="active"><a href="/">Home</a></li>
+                {% else %}
+                     <li><a href="/">Home</a></li>
+                {% endif %}
+                {% if request.path == '/create' %}
+                    <li class="active"><a href="{{ url_for('post.create') }}">Create a new post</a></li>
+                {% else %}
+                     <li><a href="{{ url_for('post.create') }}">Create a new post</a></li>
+                {% endif %}
+                {% if request.path == '/trending' %}
+                    <li class="active"><a href="{{ url_for('post.trending') }}">Trending posts</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('post.trending') }}">Trending posts</a></li>
+                {% endif %}
             </ul>
             <form action="{{ url_for('post.search') }}" method="get" class="navbar-form navbar-right" role="search">
                 <div class="form-group input-group">
@@ -64,8 +76,16 @@
                 {% if g.user %}
                     <li><a href="{{ url_for('auth.logout') }}"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('auth.register') }}"><span class="glyphicon glyphicon-pencil"></span> Register</a></li>
-                    <li><a href="{{ url_for('auth.login') }}"><span class="glyphicon glyphicon-log-in"></span> Log In</a></li>
+                    {% if request.path == '/auth/register' %}
+                        <li class="active"><a href="{{ url_for('auth.register') }}"><span class="glyphicon glyphicon-pencil"></span> Register</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.register') }}"><span class="glyphicon glyphicon-pencil"></span> Register</a></li>
+                    {% endif %}
+                    {% if request.path == '/auth/login' %}
+                        <li class="active"><a href="{{ url_for('auth.login') }}"><span class="glyphicon glyphicon-log-in"></span> Log In</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}"><span class="glyphicon glyphicon-log-in"></span> Log In</a></li>
+                    {% endif %}
                 {% endif %}
             </ul>
         </div>
