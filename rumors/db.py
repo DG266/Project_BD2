@@ -64,7 +64,7 @@ def get_user_by_username(username):
     return user
 
 
-""" POSTS """
+""" POSTS AND LIKES """
 
 
 # def get_posts():
@@ -235,6 +235,32 @@ def get_most_liked_last_hour(limit):
     ])
 
     return trending_posts
+
+
+def get_latest_posts():
+    now = datetime.datetime.now()
+    last_15min_date_time = now - datetime.timedelta(minutes=15)
+
+    posts = db.posts.find({
+        'postedAt': {
+            '$gte': last_15min_date_time
+        }
+    }).sort('postedAt', -1)
+
+    return posts
+
+
+def get_post_number(author_username):
+    num = db.posts.count_documents({
+        'creator': {
+            'username': author_username
+        }
+    })
+
+    return num
+
+
+""" DATABASE INITIALIZATION """
 
 
 def init_db():

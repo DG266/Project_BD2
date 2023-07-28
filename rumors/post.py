@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 from rumors.auth import login_required
 from rumors.db import get_posts, get_posts_with_last_date, get_post, add_post, update_post, delete_post,\
     like_post, unlike_post, add_like, delete_like, get_user_likes, get_most_liked_last_hour, get_posts_by_tags,\
-    delete_all_likes
+    delete_all_likes, get_latest_posts, get_post_number
 from bson import ObjectId
 
 import datetime
@@ -196,7 +196,21 @@ def trending():
 
     user_liked_posts = get_user_liked_posts()
 
-    return render_template('post/index.html', is_homepage = False, posts=posts, user_liked_posts=user_liked_posts)
+    return render_template('post/index.html', is_homepage=False, posts=posts, user_liked_posts=user_liked_posts)
+
+
+@bp.route('/latest', methods=('GET',))
+def latest():
+    latest_posts = get_latest_posts()
+    user_liked_posts = get_user_liked_posts()
+
+    return render_template('post/index.html', is_homepage=False, posts=latest_posts, user_liked_posts=user_liked_posts)
+
+
+@bp.before_app_request
+def load_additional_user_info():    # runs before the view function, no matter what URL is requested
+    if g.user is not None:
+        session['posts_num'] = get_post_number(g.user['username'])
 
 
 @bp.route('/search', methods=('GET',))
@@ -211,4 +225,4 @@ def search():
 
     user_liked_posts = get_user_liked_posts()
 
-    return render_template('post/index.html', is_homepage = False, posts=tagged_posts, user_liked_posts=user_liked_posts)
+    return render_template('post/index.html', is_homepage=False, posts=tagged_posts, user_liked_posts=user_liked_posts)

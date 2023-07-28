@@ -18,6 +18,7 @@
                     <img src="/static/images/no-pic.png" class="img-circle" height="65" width="65" alt="Avatar">
                     {% if g.user %}
                         <p>Hello {{ g.user['username'] }}!</p>
+                        <p>You have written {{ session.get('posts_num') }} posts.</p>
                     {% endif %}
                 </div>
 
