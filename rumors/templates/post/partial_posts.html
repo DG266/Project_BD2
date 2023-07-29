@@ -3,9 +3,10 @@
         <div class="row">
     {% else %}
         {% if is_homepage %}
+            <!-- Add infinite scroll only on homepage (for now) -->
             <div class="row" hx-get="/index?page={{ session.next_page }}" hx-trigger="revealed" hx-swap="afterend">
         {% else %}
-
+            <div class="row">
         {% endif %}
     {% endif %}
 
