@@ -272,13 +272,46 @@ def init_db():
 
     # Insert data
     project_path = os.getcwd()
-    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"), 1000)
-    insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"), 1000)
+    insert_csv_values(os.path.join(project_path, "covid19_tweets.csv"), 5000)
+    insert_other_csv_values(os.path.join(project_path, "0401_UkraineCombinedTweetsDeduped_0.csv"), 5000)
     insert_example_values()
 
     # Create indices
     db.posts.create_index([('postedAt', pymongo.DESCENDING)])
     db.likes.create_index([('likedAt', pymongo.DESCENDING)])
+
+    duplicates = db.users.aggregate([
+        {
+            '$group': {
+                '_id': {
+                    'username': '$username'
+                },
+                'dups': {
+                    '$addToSet': '$_id'
+                },
+                'count': {
+                    '$sum': 1
+                }
+            }
+        },
+        {
+            '$match': {
+                'count': {
+                    '$gt': 1
+                }
+            }
+        }
+    ])
+
+    for duplicate in duplicates:
+        username = duplicate['_id']['username']
+        print(f"Duplicate user: { username }")
+        db.users.delete_many({'username': username})
+        db.posts.delete_many({
+            'creator': {
+                'username': username
+            }
+        })
 
 
 def insert_example_values():
@@ -434,7 +467,7 @@ def insert_other_csv_values(csv_name, num):
     users_coll = db['users']
     posts_coll = db['posts']
 
-    i = 1000
+    i = num
 
     for row in df.itertuples():
         hashtags = []

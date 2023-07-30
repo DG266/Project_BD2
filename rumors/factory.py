@@ -8,7 +8,7 @@ def create_app(test_config=None):
         SECRET_KEY='dev'
     )
 
-    app.config["MONGO_URI"] = "mongodb://localhost:27017/test-database"
+    app.config["MONGO_URI"] = "mongodb://localhost:27017/RumorsDB"
 
     from . import db
     db.init_app(app)
