@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!-- SOURCE: https://www.w3schools.com/bootstrap/bootstrap_templates.asp -->
+<!--       : https://getbootstrap.com/docs/3.3/getting-started/          -->
+<title>{% block title %}{% endblock %} - Rumors</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/css/lib/bootstrap.min.css">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<style>
+    html {
+        position: relative;
+        min-height: 100%;
+    }
+    body {
+        /* Add some padding on top of the body - if you don't do this, the fixed navbar covers some of the content */
+        padding-top: 70px;
+        /* Margin bottom by footer height */
+        margin-bottom: 60px;
+    }
+    footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        /* Set the fixed height of the footer here */
+        height: 60px;
+        background-color: #555;
+        color: white;
+        padding: 15px;
+    }
+
+</style>
+
+{% block optionalStyle %}{% endblock %}
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Rumors</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav">
+                {% if request.path == '/' or request.path == '/index' %}<li class="active">{% else %}<li>{% endif %}<a href="/">Home</a></li>
+                {% if request.path == '/create' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.create') }}">Create a new post</a></li>
+                {% if request.path == '/trending' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.trending') }}">Trending posts</a></li>
+                {% if request.path == '/latest' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('post.latest') }}">Latest (15 min) posts</a></li>
+            </ul>
+            <form action="{{ url_for('post.search') }}" method="get" class="navbar-form navbar-right" role="search">
+                <div class="form-group input-group">
+                    <input type="text" class="form-control" placeholder="Search..." name="query" id="query">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                    </span>
+                </div>
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+                <!-- <li><a href="#"><span class="glyphicon glyphicon-user"></span> My Account</a></li> -->
+                {% if g.user %}
+                    <li><a href="{{ url_for('auth.logout') }}"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+                {% else %}
+                    {% if request.path == '/auth/register' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('auth.register') }}"><span class="glyphicon glyphicon-pencil"></span> Register</a></li>
+                    {% if request.path == '/auth/login' %}<li class="active">{% else %}<li>{% endif %}<a href="{{ url_for('auth.login') }}"><span class="glyphicon glyphicon-log-in"></span> Log In</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+<!-- END NAVBAR -->
+
+<!-- PAGE-SPECIFIC CONTENT -->
+<section class="content">
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+  {% block content %}{% endblock %}
+</section>
+<!-- END PAGE-SPECIFIC CONTENT -->
+
+<!-- FOOTER -->
+<footer class="container-fluid text-center navbar-fixed-bottom">
+    <p>Progetto Basi di Dati II, Daniele Galloppo, Matricola 0522501594</p>
+</footer>
+<!-- END FOOTER -->
+
+<script src="/static/js/lib/jquery-3.7.0.min.js"></script>
+<script src="/static/js/lib/bootstrap.min.js"></script>
+<script src="/static/js/lib/htmx.min.js"></script>
+<script src="/static/js/homepage.js"></script>

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+    <div class="container text-center">
+        <div class="row">
+
+            <!-- LEFT COLUMN -->
+            <div class="col-sm-3 well">
+                <div class="well">
+                    {% if g.user %}
+                        <!-- <p><a href="#">My Profile</a></p> -->
+                    {% else %}
+                        <p><a href="{{ url_for('auth.register') }}">Click here to join us!</a></p>
+                    {% endif %}
+
+                    <img src="/static/images/no-pic.png" class="img-circle" height="65" width="65" alt="Avatar">
+                    {% if g.user %}
+                        <p>Hello {{ g.user['username'] }}!</p>
+                        <p>You have written {{ session.get('posts_num') }} posts.</p>
+                    {% endif %}
+                </div>
+
+                {% if g.user %}
+                    <p><a href="{{ url_for('post.create') }}">Create a new post</a></p>
+                {% endif %}
+            </div>
+            <!-- END LEFT COLUMN -->
+
+
+            <!-- CENTRAL COLUMN -->
+            <div class="col-sm-7">
+                {% include 'post/partial_posts.html' %}
+            </div>
+            <!-- END CENTRAL COLUMN -->
+
+
+            <!-- RIGHT COLUMN -->
+            <!--
+            <div class="col-sm-2 well">
+            </div>
+            -->
+            <!-- END RIGHT COLUMN -->
+
+
+        </div>
+    </div>
+{% endblock %}

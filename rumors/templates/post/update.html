@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit your post{% endblock %}
+
+{% block content %}
+<!--
+<h3>Update your post!</h3>
+<form method="post">
+    <label for="body">Content</label>
+    <br>
+    <textarea name="body" id="body">{{ request.form['body'] or post['body'] }}</textarea>
+    <br>
+    <label for="tags">Tags (separate each tag with a comma)</label>
+    <br>
+    <textarea name="tags" id="tags">{% for tag in post['tags'] %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}</textarea>
+    <input type="submit" value="Update post">
+</form>
+-->
+
+<div class="container">
+    <form method="post">
+        <h2 class="form-signin-heading">Edit Your Post!</h2>
+        <label for="body">Content</label>
+        <textarea class="form-control" name="body" id="body" rows="6">{{ request.form['body'] or post['body'] }}</textarea>
+        <label for="tags">Tags (separate each tag with a comma)</label>
+        <textarea class="form-control" name="tags" id="tags" rows="3">{% for tag in post['tags'] %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}</textarea>
+        <br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Edit Post</button>
+    </form>
+</div>
+{% endblock %}
