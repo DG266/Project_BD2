@@ -7,7 +7,7 @@ You can create an account, log into your account, log out of your account. You c
 ## Installation and Running
 First and foremost, download Python (I've used Python 3.10.6 and PyCharm), Git (you'll probably need Git LFS to download the datasets) and MongoDB.
 Now, follow these steps:
-1. Clone this repository by running `https://github.com/DG266/Rumors.git`.
+1. Clone this repository by running `git clone https://github.com/DG266/Rumors.git`.
 2. Go inside the `Rumors` folder.
 3. Install all the requirements by running `pip install -r requirements.txt`.
 4. Start MongoDB.
